@@ -1,8 +1,8 @@
-import org.apache.spark.rdd.RDD
+
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.collection.{SortedSet, mutable}
-import scala.util.Random
+import scala.collection.SortedSet
+
 
 object SimilarItems {
   def main(args: Array[String]) {
@@ -26,7 +26,7 @@ object SimilarItems {
       // hashCode and sort the list
       //.collectAsMap()
 
-    val jaccard_val = hashedShingles.cartesian(hashedShingles).map({case (x,y) => calculateJaccardSimilarity(x._2,y._2)})
+    val jaccard_val = hashedShingles.cartesian(hashedShingles).map({case (x,y) => jacccardsimple(x._2,y._2)})
     jaccard_val.take(5).foreach(println) //(a9001001.txt,TreeSet(-2145272195, -2142988454, -2140567169, ..))
 
 
@@ -40,47 +40,36 @@ object SimilarItems {
       .toSet
   }
 
+  def jacccardsimple(doc1: SortedSet[Int], doc2: SortedSet[Int]): Double = {
+    doc1.intersect(doc2).size.toDouble/(doc1 ++ doc2).size.toDouble
+  }
   // A class that calculates the Jaccard Similarity out of two Sets of Integers
-  def calculateJaccardSimilarity(doc1: SortedSet[Int], doc2: SortedSet[Int]): Double = {
+/*  def calculateJaccardSimilarity(doc1: SortedSet[Int], doc2: SortedSet[Int]): Double = {
     var intersect: Int = 0
     var union: Int = 0
 
     def compare_values(val1: SortedSet[Int], val2: SortedSet[Int], p1: Int, p2: Int): Double = {
-      if (p1==val1.size && p2==val2.size)
-        return union.toDouble/intersect.toDouble
-      else if (p1==val1.size || p2<val2.size && val1(p1) > val2(p2))
-        {intersect += 1
-        compare_values(val1, val2, p1, p2 +1)}
-      else if (p2==val2.size || p1<val1.size && val1(p1) < val2(p2))
-        {intersect += 1
-        compare_values(val1, val2, p1 + 1, p2)}
-      else
-      {intersect += 1
-      union += 1
-      compare_values(val1, val2, p1 + 1, p2 +1)}  // A class that calculates the Jaccard Similarity out of two Sets of Integers
-      def calculateJaccardSimilarity(doc1: SortedSet[Int], doc2: SortedSet[Int]): Double = {
-        var intersect: Int = 0
-        var union: Int = 0
+      if (p1 == val1.size && p2 == val2.size)
+        union.toDouble / intersect.toDouble
+      else if (p1 == val1.size || p2 < val2.size && val1(p1) > val2(p2)) {
+        intersect += 1
+        compare_values(val1, val2, p1, p2 + 1)
+      }
+      else if (p2 == val2.size || p1 < val1.size && val1(p1) < val2(p2)) {
+        intersect += 1
+        compare_values(val1, val2, p1 + 1, p2)
+      }
+      else {
+        intersect += 1
+        union += 1
+        compare_values(val1, val2, p1 + 1, p2 + 1)
+      } // A class that calculates the Jaccard Similarity out of two Sets of Integers
+    }
 
-        def compare_values(val1: SortedSet[Int], val2: SortedSet[Int], p1: Int, p2: Int): Double = {
-          if (p1==val1.size && p2==val2.size)
-            return union.toDouble/intersect.toDouble
-          else if (p1==val1.size || p2<val2.size && val1(p1) > val2(p2))
-          {intersect += 1
-            compare_values(val1, val2, p1, p2 +1)}
-          else if (p2==val2.size || p1<val1.size && val1(p1) < val2(p2))
-          {intersect += 1
-            compare_values(val1, val2, p1 + 1, p2)}
-          else
-          {intersect += 1
-            union += 1
-            compare_values(val1, val2, p1 + 1, p2 +1)}
-        }
+    val pos_doc1: Int = 0
+    val pos_doc2: Int = 0
 
-        val pos_doc1: Int = 0
-        val pos_doc2: Int = 0
-
-        compare_values(doc1, doc2, pos_doc1, pos_doc2)
+    compare_values(doc1, doc2, pos_doc1, pos_doc2)
 
       }
     }
@@ -90,7 +79,7 @@ object SimilarItems {
 
     compare_values(doc1, doc2, pos_doc1, pos_doc2)
 
-  }
+  }*/
 
   def compareSets(A: Set[Int], B: Set[Int]): Double = {
     def compare(A: SortedSet[Int], B: SortedSet[Int], sizeIntersection: Int, sizeUnion: Int): Double = {
