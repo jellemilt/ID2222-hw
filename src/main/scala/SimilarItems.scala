@@ -21,16 +21,37 @@ object SimilarItems {
     //docs.take(5).foreach(println)
 
     //make shingles and hash the shingles to a Int value
-    val hashedShingles = docs.mapValues(makeShingles(_, 10))
+    val hashedShingles = docs.mapValues(makeShingles(_, 3))
       .mapValues(_.map(_.hashCode.intValue()).to[SortedSet]) // Hash the shingles to
       // hashCode and sort the list
-      //.collectAsMap()
+      .collectAsMap()
 
-    val minHasher = new MinHashing(10000,100)
+
+    //*************************************************************
+    //THIS IS WHERE MY PART STARTS
+    //YOU CAN CHANGE THE REST TO WHATEVER THE FUCK
+    //IF THE CODE DOWN HERE DOESNT WORK THEN; JUST COMMENT IT
+    //ILL FIX IT THEN AFTERWARDS
+    //*************************************************************
+    val minHasher = new MinHashing(1000000000,100)
     val minHashedShingles = hashedShingles.mapValues{hashedShingle => minHasher.minHash(hashedShingle.toSet)}
 
-    hashedShingles.take(1).foreach(println)
-    minHashedShingles.take(1).foreach(println) //(a9001001.txt,TreeSet(-2145272195, -2142988454, -2140567169, ..))
+    val keys = minHashedShingles.keySet
+    hashedShingles.take(2).foreach(println)
+    //minHashedShingles.take(2).foreach(println)
+    //println((minHashedShingles apply keys.head)) //(a9001001.txt,TreeSet(-2145272195, -2142988454, -2140567169, ..))
+    val compareSignatures = new CompareSignatures
+    println((minHashedShingles apply keys.head).size)
+    println(keys.getClass)
+    minHashedShingles.foreach{
+        case(key1,mhs1)=>
+          minHashedShingles.foreach{
+            case(key2,mhs2)=>{
+              val similarity = compareSignatures.compareVectors(mhs1,mhs2)
+              if (similarity >0.6f && similarity < 1)
+                println(key1+" and "+key2+" -> "+similarity)
+            }}}
+
 
   }
 
