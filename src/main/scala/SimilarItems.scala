@@ -1,4 +1,3 @@
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.SortedSet
@@ -81,12 +80,6 @@ object SimilarItems {
     //No modulo needed. It would have to be Modulo 2^32 which is the size of Int -> Int modulos it by default
     return minHashs.toSet
   }
-
-  // A function that calculates the Jaccard Similarity out of two Sets of Integers
-  def calculateJaccardSimilarity(doc1: Set[Int], doc2: Set[Int]): Double = {
-    var placeholer: Double = 0.5
-    return placeholer
-
 
 
 
