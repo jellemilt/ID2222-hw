@@ -11,7 +11,7 @@ object SimilarItems {
       .setAppName("Similar Items")
       .setMaster("local[*]")
     val sc = new SparkContext(conf)
-    val filePath = "src/Data/Part1/awards_1990/awd_1990_00/"
+    val filePath = "src/Data"//Part1/awards_1990/awd_1990_00/"
 
     val docs = sc.wholeTextFiles(filePath).cache()
       .mapValues(text => text.replace("\\s+", " ")) //replace line breaks with space
@@ -22,9 +22,8 @@ object SimilarItems {
       .mapValues(_.map(_.hashCode.intValue()).to[SortedSet]) // Hash the shingles to hashCode and sort the list
 
     //Use minHasher to turn hashedShingles into a signature
-    val minHasher = new MinHashing(1000000000,100)
+    val minHasher = new MinHashing(1000000000,1000)
     val minHashedShingles = hashedShingles.mapValues{hashedShingle => minHasher.minHash(hashedShingle.toSet)}
-    minHashedShingles.take(5).foreach(println)
     //val keys = minHashedShingles.collectAsMap().keySet
 
     //Use Locality Sensitive Hashing to dertermine candidate pairs of document, based on their signature
@@ -64,19 +63,17 @@ object SimilarItems {
     println("LSH candidate pairs, filtered by signature comparison, and by the shingle comparison")
     similarDocumentsWRTShingles.collect().foreach({case(doc1,doc2,score)=> println("%s and %s | %.4f".format(doc1._1, doc2._1, score))})
 
-
-
-//
-//    println((minHashedShingles.collectAsMap() apply keys.head).size)
-//    println(keys.getClass)
-//    minHashedShingles.foreach{
-//        case(key1,mhs1)=>
-//          minHashedShingles.foreach{
-//            case(key2,mhs2)=>{
-//              val similarity = compareSignatures.compareVectors(mhs1,mhs2)
-//              if (similarity >0.6f && similarity < 1)
-//                println(key1+" and "+key2+" -> "+similarity)
-//            }}}
+    println("MinHashed documents filtered by signature comparison")
+    //Creating a copy of minHashedShingles to distribute among RDD nodes
+    val mHSnoSpark = minHashedShingles.collectAsMap()
+    minHashedShingles.foreach{
+        case(key1,mhs1)=>
+          mHSnoSpark.foreach{
+            case(key2,mhs2)=>{
+              val similarity = signatureSimilarity(mhs1,mhs2)
+              if (similarity >0.3f && similarity < 1)
+                println(key1+" and "+key2+" -> MinHash Signature Similarity: "+similarity)
+            }}}
 
 
     }
@@ -99,12 +96,16 @@ object SimilarItems {
   }
 
   // 3.) A Function that creates a signature out of a list of hashed shingles
-  def minHashing(shingle: Set[Int], hashAmount: Int): Set[Int] = {
+  //THIS DOES NOT WORK, since the hashes have to be static
+  def minHashing(shingle: Set[Int], range: Int, hashAmount: Int): Set[Int] = {
     //defines how many possibilities there are for hash functions
-    val randomness = 10000
-    //start by defining -hashAmount- different hashs of the form y=mx+t
-    val hashs = List.fill(hashAmount)(Random.nextInt(randomness),Random.nextInt(randomness))
-    val minHashs = hashs.map{case(m,t) => shingle.map(m*_+t).min}
+
+    val randomness = Int.MaxValue
+    //Set min value, so that all bits in the integer are potentially set
+    val minHashValue = 10000000
+    //start by defining -hashAmount- different hashs of the form ((s*m)^t)%range
+    var hashes: List[(Int,Int)] = List.fill(hashAmount)(Random.nextInt(randomness),Random.nextInt(randomness))
+    val minHashs = hashes.map{case(m,t) => shingle.map(s => Math.abs((s*m)^t)%range).min}
     //No modulo needed. It would have to be Modulo 2^32 which isulos  the size of Int -> Int modit by default
     minHashs.toSet
   }

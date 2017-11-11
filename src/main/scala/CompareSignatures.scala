@@ -1,4 +1,4 @@
-class CompareSignatures {
+class CompareSignatures extends java.io.Serializable{
 
   def compareVectors(vec1: List[Int], vec2: List[Int]): Float ={
     val joinedVecs = vec1 zip vec2
