@@ -109,6 +109,7 @@ object SimilarItems {
     //No modulo needed. It would have to be Modulo 2^32 which isulos  the size of Int -> Int modit by default
     minHashs.toSet
   }
+
   // 4.) A function that calculates the similarity of two documents based on their signatures
   def signatureSimilarity(sign1: List[Int], sign2: List[Int]): Double = {
     val joinedVecs = sign1 zip sign2
